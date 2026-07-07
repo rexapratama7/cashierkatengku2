@@ -14,7 +14,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', Roboto, sans-serif; }
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .sortable-ghost { opacity: 0.4; background-color: #e0e7ff !important; border: 2px dashed #6366f1 !important; }
         .sortable-chosen { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); cursor: grabbing !important; }
@@ -207,10 +207,15 @@
 
     <main id="page-cashier" class="tab-content flex-1 p-4 md:p-6 flex flex-col lg:flex-row gap-6 max-w-[1600px] w-full mx-auto" style="display: none;">
         <section class="flex-1 bg-white rounded-2xl p-6 border border-slate-200 shadow-xs flex flex-col">
-            <div class="mb-6 pb-4 border-b border-slate-100">
-                <h2 class="text-xl font-bold text-slate-800">Daftar Menu Kasir</h2>
-                <p class="text-xs text-slate-400 mt-1">Masukkan kuantitas, kemudian klik Pilih untuk memasukkan pesanan.</p>
+            <div class="mb-4 pb-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800">Daftar Menu Kasir</h2>
+                    <p class="text-xs text-slate-400 mt-1">Masukkan kuantitas, kemudian klik Pilih untuk memasukkan pesanan.</p>
+                </div>
             </div>
+            <div id="kategori-bar" class="flex overflow-x-auto space-x-3 py-1 mb-4 custom-scroll items-center border-b border-gray-100 pb-3">
+            </div>
+            
             <div id="menu-grid" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4"></div>
         </section>
 
@@ -305,9 +310,12 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Kategori</label>
-                    <select id="input-menu-category" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-hidden focus:border-indigo-500 cursor-pointer">
-                        <option value="Makanan">Makanan</option><option value="Minuman">Minuman</option>
-                    </select>
+                    <div class="flex gap-2">
+                        <select id="input-menu-category" class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-hidden focus:border-indigo-500 cursor-pointer">
+                            </select>
+                        <button type="button" onclick="addCategory()" class="bg-indigo-100 text-indigo-600 px-3 rounded-xl hover:bg-indigo-200 transition font-bold material-symbols-outlined cursor-pointer" title="Tambah Kategori">add</button>
+                        <button type="button" onclick="deleteCurrentCategory()" class="bg-rose-100 text-rose-600 px-3 rounded-xl hover:bg-rose-200 transition font-bold material-symbols-outlined cursor-pointer" title="Hapus Kategori">delete</button>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Foto Produk</label>
@@ -516,27 +524,36 @@
         const SPREADSHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyObRBagKiyqoJpViTTpsDgCBp10qME7z0G5s929qUwOspTxcsSAZ_J2nH5raQ8_-pXCg/exec";
 
         let menuData = JSON.parse(localStorage.getItem('kasir_menu_data')) || [
-            { id: 1, name: "Sop 3 Potong", price: 30000, category: "Makanan", img: "https://i.ibb.co.com/cXhx0jfz/image.png" },
-            { id: 2, name: "Sop 4 Potong", price: 36000, category: "Makanan", img: "https://i.ibb.co.com/5gTwNg7T/image.png" },
-            { id: 3, name: "Sop 5 Potong", price: 45000, category: "Makanan", img: "https://i.ibb.co.com/wnQ8Qrn/image.png" },
-            { id: 4, name: "Sop 6 Potong", price: 54000, category: "Makanan", img: "https://i.ibb.co.com/tp09qymz/image.png" },
-            { id: 5, name: "Sop 7 Potong", price: 63000, category: "Makanan", img: "https://i.ibb.co.com/FkFn6hm2/image.png" },      
-            { id: 6, name: "Sop 8 Potong", price: 72000, category: "Makanan", img: "https://i.ibb.co.com/WWQW6dSK/image.png" },
-            { id: 7, name: "Sop 9 Potong", price: 81000, category: "Makanan", img: "https://i.ibb.co.com/CpNHm1jy/image.png" },
-            { id: 8, name: "Sop/Potong", price: 9000, category: "Makanan", img: "https://i.ibb.co.com/8nJFSVYz/image.png" },
+            { id: 1, name: "Sop 3 Potong", price: 30000, category: "Sop", img: "https://i.ibb.co.com/cXhx0jfz/image.png" },
+            { id: 2, name: "Sop 4 Potong", price: 36000, category: "Sop", img: "https://i.ibb.co.com/5gTwNg7T/image.png" },
+            { id: 3, name: "Sop 5 Potong", price: 45000, category: "Sop", img: "https://i.ibb.co.com/wnQ8Qrn/image.png" },
+            { id: 4, name: "Sop 6 Potong", price: 54000, category: "Sop", img: "https://i.ibb.co.com/tp09qymz/image.png" },
+            { id: 5, name: "Sop 7 Potong", price: 63000, category: "Sop", img: "https://i.ibb.co.com/FkFn6hm2/image.png" },      
+            { id: 6, name: "Sop 8 Potong", price: 72000, category: "Sop", img: "https://i.ibb.co.com/WWQW6dSK/image.png" },
+            { id: 7, name: "Sop 9 Potong", price: 81000, category: "Sop", img: "https://i.ibb.co.com/CpNHm1jy/image.png" },
+            { id: 8, name: "Sop/Potong", price: 9000, category: "Sop", img: "https://i.ibb.co.com/8nJFSVYz/image.png" },
             { id: 9, name: "Nasi", price: 6000, category: "Makanan", img: "https://i.ibb.co.com/VpDzGRth/image.png" },
             { id: 10, name: "Nasi 1/2", price: 4000, category: "Makanan", img: "https://i.ibb.co.com/VpDzGRth/image.png" },
-            { id: 11, name: "Emping", price: 10000, category: "Makanan", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdm2nmv1VKtLsk3nbSOzcOGqcylL1OctnOYA&s" },
-            { id: 12, name: "Emping 1/2", price: 5000, category: "Makanan", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdm2nmv1VKtLsk3nbSOzcOGqcylL1OctnOYA&s" },        
-            { id: 13, name: "Sate 5 Tusuk", price: 35000, category: "Makanan", img: "https://assets.unileversolutions.com/recipes-v2/252622.png" },
-            { id: 14, name: "Sate 10 Tusuk", price: 55000, category: "Makanan", img: "https://assets.unileversolutions.com/recipes-v2/252622.png" },
-            { id: 15, name: "Sate 15 Tusuk", price: 90000, category: "Makanan", img: "https://assets.unileversolutions.com/recipes-v2/252622.png" },
+            { id: 11, name: "Emping", price: 10000, category: "Tambahan", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdm2nmv1VKtLsk3nbSOzcOGqcylL1OctnOYA&s" },
+            { id: 12, name: "Emping 1/2", price: 5000, category: "Tambahan", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdm2nmv1VKtLsk3nbSOzcOGqcylL1OctnOYA&s" },        
+            { id: 13, name: "Sate 5 Tusuk", price: 35000, category: "Sate", img: "https://assets.unileversolutions.com/recipes-v2/252622.png" },
+            { id: 14, name: "Sate 10 Tusuk", price: 55000, category: "Sate", img: "https://assets.unileversolutions.com/recipes-v2/252622.png" },
+            { id: 15, name: "Sate 15 Tusuk", price: 90000, category: "Sate", img: "https://assets.unileversolutions.com/recipes-v2/252622.png" },
             { id: 16, name: "Air Jeruk", price: 15000, category: "Minuman", img: "https://png.pngtree.com/png-vector/20260117/ourmid/pngtree-freshly-squeezed-iced-orange-juice-es-jeruk-png-image_18551166.webp" },
             { id: 17, name: "Teh Manis", price: 5000, category: "Minuman", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS1vrm0aYp4zLy-a6q7T6U2sNV67wVeBDlXvg&s" },
-            { id: 18, name: "Teh Botol", price: 5000, category: "Makanan", img: "https://i.pinimg.com/736x/bc/6a/92/bc6a929cb1e58787e26044a98fbb6031.jpg" },
-            { id: 19, name: "Air Mineral", price: 5000, category: "Makanan", img: "https://image.astronauts.cloud/product-images/2023/12/AquaMineralWater600ml_c4e5fb0f-7d61-40c9-bba9-f15df606cde9_900x900.png" },
-            { id: 20, name: "Es Teh Tawar", price: 3000, category: "Makanan", img: "https://i.pinimg.com/236x/ef/2c/1b/ef2c1b0ccdfa7ad0b24609102ec9b0fe.jpg" }
+            { id: 18, name: "Teh Botol", price: 5000, category: "Minuman", img: "https://i.pinimg.com/736x/bc/6a/92/bc6a929cb1e58787e26044a98fbb6031.jpg" },
+            { id: 19, name: "Air Mineral", price: 5000, category: "Minuman", img: "https://image.astronauts.cloud/product-images/2023/12/AquaMineralWater600ml_c4e5fb0f-7d61-40c9-bba9-f15df606cde9_900x900.png" },
+            { id: 20, name: "Es Teh Tawar", price: 3000, category: "Minuman", img: "https://i.pinimg.com/236x/ef/2c/1b/ef2c1b0ccdfa7ad0b24609102ec9b0fe.jpg" }
         ];
+
+        // --- SISTEM KATEGORI DINAMIS ---
+        let categories = JSON.parse(localStorage.getItem('kasir_categories'));
+        if (!categories) {
+            categories = [...new Set(menuData.map(m => m.category))];
+            if (!categories.includes("Sop")) categories.unshift("Sop"); 
+            localStorage.setItem('kasir_categories', JSON.stringify(categories));
+        }
+        let currentCategoryFilter = 'All';
 
         let cartArray = []; 
         let pendingOrders = JSON.parse(localStorage.getItem('kasir_pending_orders')) || [];
@@ -551,6 +568,80 @@
         
         let comboChartInstance = null;
         let paymentChartInstance = null;
+
+        // --- Variabel Pagination Riwayat ---
+        let historyCurrentPage = 1;
+        const historyItemsPerPage = 10;
+
+        function updateCategoryDropdowns() {
+            const options = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+            const catSelect = document.getElementById('input-menu-category');
+            if(catSelect) {
+                const currentVal = catSelect.value;
+                catSelect.innerHTML = options;
+                if(categories.includes(currentVal)) {
+                    catSelect.value = currentVal;
+                }
+            }
+        }
+
+        function addCategory() {
+            const newCat = prompt("Masukkan nama kategori baru:");
+            if (newCat && newCat.trim() !== "") {
+                const catName = newCat.trim();
+                if (!categories.includes(catName)) {
+                    categories.push(catName);
+                    localStorage.setItem('kasir_categories', JSON.stringify(categories));
+                    updateCategoryDropdowns();
+                    document.getElementById('input-menu-category').value = catName;
+                    renderCategoryBar();
+                } else {
+                    alert("Kategori tersebut sudah ada!");
+                }
+            }
+        }
+
+        function deleteCurrentCategory() {
+            const catSelect = document.getElementById('input-menu-category');
+            const catToDelete = catSelect.value;
+            if (!catToDelete) return;
+
+            if (menuData.some(m => m.category === catToDelete)) {
+                alert(`Kategori "${catToDelete}" sedang digunakan oleh beberapa menu. Harap ubah kategori menu tersebut atau hapus menunya terlebih dahulu.`);
+                return;
+            }
+
+            if (confirm(`Apakah Anda yakin ingin menghapus kategori "${catToDelete}"?`)) {
+                categories = categories.filter(c => c !== catToDelete);
+                localStorage.setItem('kasir_categories', JSON.stringify(categories));
+                updateCategoryDropdowns();
+                renderCategoryBar();
+            }
+        }
+
+        function renderCategoryBar() {
+            const bar = document.getElementById('kategori-bar');
+            if(!bar) return;
+            
+            let html = `<button onclick="filterCategory('All')" class="${currentCategoryFilter === 'All' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'} px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition cursor-pointer">Semua Menu</button>`;
+            
+            categories.forEach(cat => {
+                html += `<button onclick="filterCategory('${cat}')" class="${currentCategoryFilter === cat ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'} px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition cursor-pointer">${cat}</button>`;
+            });
+            bar.innerHTML = html;
+        }
+
+        function filterCategory(cat) {
+            currentCategoryFilter = cat;
+            renderCategoryBar();
+            renderMenu();
+        }
+
+        function quickAddMenuToCategory(cat) {
+            switchTab('menu');
+            document.getElementById('input-menu-category').value = cat;
+            document.getElementById('input-menu-name').focus();
+        }
 
         function getCRC16(str) {
             let crc = 0xFFFF;
@@ -625,6 +716,7 @@
             } else if (tabName === 'transactions') {
                 renderTransactions();
             } else if (tabName === 'history') {
+                historyCurrentPage = 1;
                 renderHistory();
             } else if (tabName === 'menu') {
                 resetFormToDefault();
@@ -846,7 +938,10 @@
 
         function renderMenu() {
             const grid = document.getElementById('menu-grid'); if(!grid) return;
-            grid.innerHTML = menuData.map(item => {
+            
+            let filteredMenu = currentCategoryFilter === 'All' ? menuData : menuData.filter(m => m.category === currentCategoryFilter);
+            
+            let html = filteredMenu.map(item => {
                 let badgeQty = 0;
                 cartArray.forEach(c => { if(c.id === item.id) badgeQty += c.qty; });
                 return `
@@ -870,6 +965,17 @@
                         </div>
                     </div>`;
             }).join('');
+
+            // Tombol "Tambah Menu Baru" di ujung jika menggunakan filter kategori spesifik
+            if (currentCategoryFilter !== 'All') {
+                html += `
+                    <div onclick="quickAddMenuToCategory('${currentCategoryFilter}')" class="border-2 border-dashed border-indigo-200 bg-indigo-50/30 rounded-2xl p-8 flex flex-col items-center justify-center transition hover:border-indigo-400 hover:bg-indigo-50 cursor-pointer group min-h-[250px]">
+                        <span class="material-symbols-outlined text-4xl text-indigo-300 group-hover:text-indigo-500 mb-2 transition">add_circle</span>
+                        <h3 class="font-bold text-slate-500 group-hover:text-indigo-600 text-center transition">Tambah Menu Baru<br>di ${currentCategoryFilter}</h3>
+                    </div>`;
+            }
+
+            grid.innerHTML = html;
         }
 
         function renderManagementList() {
@@ -896,6 +1002,7 @@
             document.getElementById('form-text-label').innerText = "Tambah Menu Baru";
             document.getElementById('btn-submit-form').innerText = "+ Simpan Menu";
             document.getElementById('btn-cancel-edit').classList.add('hidden');
+            updateCategoryDropdowns();
         }
 
         function loadMenuToForm(id) {
@@ -903,7 +1010,16 @@
             document.getElementById('input-menu-id').value = item.id;
             document.getElementById('input-menu-name').value = item.name;
             document.getElementById('input-menu-price').value = item.price;
+            
+            // Tambahkan ke dropdown list jika belum ada saat load edit
+            if (!categories.includes(item.category)) {
+                categories.push(item.category);
+                localStorage.setItem('kasir_categories', JSON.stringify(categories));
+                updateCategoryDropdowns();
+                renderCategoryBar();
+            }
             document.getElementById('input-menu-category').value = item.category;
+            
             document.getElementById('form-text-label').innerText = "Edit Menu";
             document.getElementById('btn-submit-form').innerText = "Update";
             document.getElementById('btn-cancel-edit').classList.remove('hidden');
@@ -990,11 +1106,9 @@
             const orderId = getAvailableOrderId();
             if (!orderId) return alert("Antrian penuh! Silakan selesaikan pesanan yang ada terlebih dahulu (Maksimal 50).");
 
-            // Ambil Nama Pemesan
             const customerNameInput = document.getElementById('input-customer-name');
             const customerName = customerNameInput.value.trim() || 'Tanpa Nama';
             
-            // Ambil Tipe Pemesanan (Dine-in / Take Away)
             const orderTypeInput = document.querySelector('input[name="input-order-type"]:checked');
             const orderType = orderTypeInput ? orderTypeInput.value : 'Dine-in';
 
@@ -1046,7 +1160,7 @@
 
             container.innerHTML = pendingOrders.map(order => `
                 <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm hover:border-indigo-200 transition">
-                    <div class="p-4 flex flex-wrap gap-4 justify-between items-center bg-slate-50/50 cursor-pointer" onclick="toggleOrderDetails('${order.orderId}')">
+                    <div class="p-4 flex flex-wrap gap-4 justify-between items-center bg-slate-50/50 cursor-pointer" onclick="toggleOrderDetails('trans-${order.orderId}')">
                         <div class="flex items-center gap-4">
                             <div class="bg-indigo-100 text-indigo-700 font-black rounded-xl w-12 h-12 flex items-center justify-center text-lg shadow-inner">#${order.orderId}</div>
                             <div>
@@ -1068,12 +1182,12 @@
                             <button onclick="event.stopPropagation(); openCheckoutModal(${order.orderId})" class="bg-indigo-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-indigo-700 shadow-sm active:scale-95 transition flex items-center gap-1 cursor-pointer">
                                 <span class="material-symbols-outlined text-[18px]">payments</span> Bayar
                             </button>
-                            <button class="bg-white border border-slate-200 w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 transition cursor-pointer">
-                                <span class="material-symbols-outlined transition-transform duration-300" id="icon-toggle-${order.orderId}">expand_more</span>
+                            <button onclick="event.stopPropagation(); toggleOrderDetails('trans-${order.orderId}')" class="bg-white border border-slate-200 w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 transition cursor-pointer">
+                                <span class="material-symbols-outlined transition-transform duration-300" id="icon-toggle-trans-${order.orderId}">expand_more</span>
                             </button>
                         </div>
                     </div>
-                    <div id="details-${order.orderId}" class="hidden border-t border-slate-100 p-4 bg-white text-sm space-y-3">
+                    <div id="details-trans-${order.orderId}" class="hidden border-t border-slate-100 p-4 bg-white text-sm space-y-3">
                         ${order.items.map(item => `
                             <div class="flex justify-between items-center pb-2 border-b border-slate-50 last:border-0 last:pb-0">
                                 <div>
@@ -1088,7 +1202,12 @@
             `).join('');
         }
 
-        // --- TAB RIWAYAT PESANAN ---
+        function changeHistoryPage(dir) {
+            historyCurrentPage += dir;
+            renderHistory();
+        }
+
+        // --- TAB RIWAYAT PESANAN (Pagination & Fix Bug) ---
         function renderHistory() {
             const container = document.getElementById('history-list');
             if(!container) return;
@@ -1102,9 +1221,18 @@
                 return;
             }
 
-            container.innerHTML = completedOrders.map(order => `
+            const totalPages = Math.ceil(completedOrders.length / historyItemsPerPage);
+            if (historyCurrentPage > totalPages) historyCurrentPage = totalPages;
+            if (historyCurrentPage < 1) historyCurrentPage = 1;
+
+            const startIndex = (historyCurrentPage - 1) * historyItemsPerPage;
+            const paginatedOrders = completedOrders.slice(startIndex, startIndex + historyItemsPerPage);
+
+            let html = paginatedOrders.map((order, idx) => {
+                const uniqueId = `hist-${order.transactionId}-${order.timestampSelesai || idx}`;
+                return `
                 <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm hover:border-emerald-200 transition">
-                    <div class="p-4 flex flex-wrap gap-4 justify-between items-center bg-slate-50/50 cursor-pointer" onclick="toggleOrderDetails('hist-${order.transactionId}')">
+                    <div class="p-4 flex flex-wrap gap-4 justify-between items-center bg-slate-50/50 cursor-pointer" onclick="toggleOrderDetails('${uniqueId}')">
                         <div class="flex items-center gap-4">
                             <div class="bg-emerald-100 text-emerald-700 font-black rounded-xl w-12 h-12 flex items-center justify-center text-lg shadow-inner">
                                 <span class="material-symbols-outlined">check_circle</span>
@@ -1122,12 +1250,12 @@
                             <button onclick="event.stopPropagation(); reprintReceipt('${order.transactionId}')" class="bg-indigo-50 text-indigo-600 w-10 h-10 rounded-xl flex items-center justify-center hover:bg-indigo-100 transition cursor-pointer" title="Cetak Ulang Nota">
                                 <span class="material-symbols-outlined text-[20px]">print</span>
                             </button>
-                            <button class="bg-white border border-slate-200 w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 transition cursor-pointer">
-                                <span class="material-symbols-outlined transition-transform duration-300" id="icon-toggle-hist-${order.transactionId}">expand_more</span>
+                            <button onclick="event.stopPropagation(); toggleOrderDetails('${uniqueId}')" class="bg-white border border-slate-200 w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 transition cursor-pointer">
+                                <span class="material-symbols-outlined transition-transform duration-300" id="icon-toggle-${uniqueId}">expand_more</span>
                             </button>
                         </div>
                     </div>
-                    <div id="details-hist-${order.transactionId}" class="hidden border-t border-slate-100 p-4 bg-white text-sm space-y-3">
+                    <div id="details-${uniqueId}" class="hidden border-t border-slate-100 p-4 bg-white text-sm space-y-3">
                         <div class="text-xs text-slate-400 mb-2 border-b border-slate-100 pb-2">ID Transaksi: ${order.transactionId} | Metode: ${order.paymentMethod || '-'}</div>
                         ${order.items.map(item => `
                             <div class="flex justify-between items-center pb-2 border-b border-slate-50 last:border-0 last:pb-0">
@@ -1140,7 +1268,18 @@
                         `).join('')}
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
+
+            if (totalPages > 1) {
+                html += `
+                <div class="flex items-center justify-between mt-6 bg-slate-50 p-3 rounded-xl border border-slate-200 shadow-sm">
+                    <button onclick="changeHistoryPage(-1)" ${historyCurrentPage === 1 ? 'disabled class="opacity-50 cursor-not-allowed text-slate-400 p-2 font-bold flex items-center justify-center"' : 'class="p-2 text-indigo-600 bg-white border border-slate-200 shadow-sm hover:bg-indigo-50 font-bold rounded-xl flex items-center justify-center transition cursor-pointer"'}><span class="material-symbols-outlined">chevron_left</span></button>
+                    <span class="text-sm font-bold text-slate-600 bg-white border border-slate-200 shadow-sm px-4 py-2 rounded-xl">Halaman ${historyCurrentPage} dari ${totalPages}</span>
+                    <button onclick="changeHistoryPage(1)" ${historyCurrentPage === totalPages ? 'disabled class="opacity-50 cursor-not-allowed text-slate-400 p-2 font-bold flex items-center justify-center"' : 'class="p-2 text-indigo-600 bg-white border border-slate-200 shadow-sm hover:bg-indigo-50 font-bold rounded-xl flex items-center justify-center transition cursor-pointer"'}><span class="material-symbols-outlined">chevron_right</span></button>
+                </div>`;
+            }
+
+            container.innerHTML = html;
         }
 
         function reprintReceipt(transactionId) {
@@ -1156,6 +1295,7 @@
         function toggleOrderDetails(id) {
             const detailDiv = document.getElementById(`details-${id}`);
             const icon = document.getElementById(`icon-toggle-${id}`);
+            
             if (detailDiv && detailDiv.classList.contains('hidden')) {
                 detailDiv.classList.remove('hidden');
                 if (icon) icon.style.transform = 'rotate(180deg)';
@@ -1506,12 +1646,11 @@
                     window.open(data.pdfUrl, '_blank');
                 }
                 
-                // Simpan ke riwayat lokal
                 order.transactionId = kodeTransaksi;
                 order.paymentMethod = method;
                 order.timestampSelesai = now.getTime();
                 completedOrders.unshift(order);
-                if (completedOrders.length > 100) completedOrders.pop(); // Batasi 100 riwayat agar penyimpanan tetap ringan
+                if (completedOrders.length > 100) completedOrders.pop(); 
                 saveCompletedOrdersToStorage();
                 
                 pendingOrders = pendingOrders.filter(o => o.orderId !== currentCheckoutOrderId);
@@ -1650,12 +1789,16 @@
             `;
         }
 
-        function updateUI() { renderMenu(); renderCart(); }
+        function updateUI() { renderCategoryBar(); renderMenu(); renderCart(); }
 
         document.addEventListener("DOMContentLoaded", function() {
             const today = new Date();
             document.getElementById('filter-month').value = today.getMonth() + 1;
             document.getElementById('filter-year').value = today.getFullYear();
+            
+            updateCategoryDropdowns();
+            renderCategoryBar();
+            
             switchTab('dashboard');
         });
 
@@ -1666,10 +1809,21 @@
                 onEnd: function () {
                     let updated = [];
                     Array.from(gridEl.children).forEach(child => {
-                        const found = menuData.find(m => m.id === parseInt(child.getAttribute('data-id')));
-                        if(found) updated.push(found);
+                        const idStr = child.getAttribute('data-id');
+                        if (idStr) {
+                            const found = menuData.find(m => m.id === parseInt(idStr));
+                            if(found) updated.push(found);
+                        }
                     });
-                    menuData = updated; saveMenuToStorage();
+                    
+                    if(currentCategoryFilter !== 'All') {
+                        const others = menuData.filter(m => m.category !== currentCategoryFilter);
+                        menuData = [...updated, ...others];
+                    } else {
+                        menuData = updated;
+                    }
+                    
+                    saveMenuToStorage();
                 }
             });
         }
