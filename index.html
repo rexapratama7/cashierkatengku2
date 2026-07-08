@@ -47,6 +47,8 @@
         .icon-fix { top: 8px; width: 5px; left: 26px; z-index: 1; height: 85px; position: absolute; transform: rotate(-45deg); background-color: #FFFFFF; }
         @keyframes icon-line-tip { 0% { width: 0; left: 1px; top: 19px; } 54% { width: 0; left: 1px; top: 19px; } 70% { width: 50px; left: -8px; top: 37px; } 84% { width: 17px; left: 21px; top: 48px; } 100% { width: 25px; left: 14px; top: 46px; } }
         @keyframes icon-line-long { 0% { width: 0; right: 46px; top: 54px; } 65% { width: 0; right: 46px; top: 54px; } 84% { width: 55px; right: 0px; top: 35px; } 100% { width: 47px; right: 8px; top: 38px; } }
+        
+        .scale-75 { transform: scale(0.75); }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
@@ -210,7 +212,7 @@
             <div class="mb-4 pb-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h2 class="text-xl font-bold text-slate-800">Daftar Menu Kasir</h2>
-                    <p class="text-xs text-slate-400 mt-1">Masukkan kuantitas, kemudian klik Pilih untuk memasukkan pesanan.</p>
+                    <p class="text-xs text-slate-400 mt-1">Pilih kategori, kemudian masukkan kuantitas pesanan.</p>
                 </div>
             </div>
             <div id="kategori-bar" class="flex overflow-x-auto space-x-3 py-1 mb-4 custom-scroll items-center border-b border-gray-100 pb-3">
@@ -263,9 +265,9 @@
                         <span>Total Tagihan</span><span id="total-price" class="text-indigo-600 text-lg">Rp 0</span>
                     </div>
                 </div>
-                <button id="btn-save-order" onclick="saveOrder()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition cursor-pointer">
-                    <span id="btn-icon" class="material-symbols-outlined text-md">save</span>
-                    <span id="btn-text">Simpan ke Daftar Transaksi</span>
+                <button id="btn-save-order" onclick="proceedToNext()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition cursor-pointer">
+                    <span id="btn-icon" class="material-symbols-outlined text-md">arrow_forward</span>
+                    <span id="btn-text">Next</span>
                 </button>
             </div>
         </section>
@@ -354,6 +356,19 @@
             </div>
         </section>
     </main>
+
+    <div id="next-action-modal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[105] px-4 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl w-full max-w-[320px] flex flex-col shadow-xl overflow-hidden relative p-6 space-y-4 text-center">
+            <h3 class="text-lg font-bold text-slate-800 mb-2">Tindakan Selanjutnya</h3>
+            <button onclick="actionDirectCheckout()" class="w-full bg-emerald-600 text-white font-semibold py-3 rounded-xl hover:bg-emerald-700 flex items-center justify-center gap-2 cursor-pointer transition">
+                <span class="material-symbols-outlined text-[20px]">payments</span> Lanjutkan Pembayaran
+            </button>
+            <button onclick="actionSaveOnly()" class="w-full bg-indigo-600 text-white font-semibold py-3 rounded-xl hover:bg-indigo-700 flex items-center justify-center gap-2 cursor-pointer transition">
+                <span class="material-symbols-outlined text-[20px]">save</span> Simpan ke Transaksi
+            </button>
+            <button onclick="closeNextModal()" class="mt-2 text-sm text-slate-400 hover:text-slate-600 font-medium cursor-pointer transition">Batal</button>
+        </div>
+    </div>
 
     <div id="edit-modal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[90] p-4 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl w-full max-w-[1100px] h-[90vh] flex flex-col shadow-xl overflow-hidden relative">
@@ -483,6 +498,37 @@
         </div>
     </div>
 
+    <div id="modal-loading-upload" class="fixed inset-0 bg-slate-900/80 hidden z-[140] items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm text-center flex flex-col items-center">
+            
+            <div id="loading-state" class="flex flex-col items-center">
+                <div class="relative w-20 h-20 mb-4">
+                    <div class="absolute inset-0 border-4 border-slate-100 rounded-full"></div>
+                    <div class="absolute inset-0 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-indigo-600 animate-pulse">cloud_upload</span>
+                    </div>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2">Menyimpan Transaksi</h3>
+                <p class="text-slate-500 text-sm">Mohon tunggu, sedang sinkronisasi ke server...</p>
+            </div>
+
+            <div id="success-state" class="hidden flex-col items-center w-full">
+                <div class="success-checkmark scale-75 mb-0">
+                    <div class="check-icon">
+                        <span class="icon-line line-tip"></span>
+                        <span class="icon-line line-long"></span>
+                        <div class="icon-circle"></div>
+                        <div class="icon-fix"></div>
+                    </div>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mt-2 mb-2">Transaksi Berhasil!</h3>
+                <p class="text-slate-500 text-sm">Data telah tersimpan di sistem.</p>
+            </div>
+
+        </div>
+    </div>
+
     <div id="modal-qris-custom" class="fixed inset-0 bg-slate-900/80 hidden z-[120] flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative flex flex-col items-center modal-scrollable">
             <h3 class="text-xl font-bold mb-2 text-slate-800">Pembayaran QRIS</h3>
@@ -534,11 +580,11 @@
             { id: 8, name: "Sop/Potong", price: 9000, category: "Sop", img: "https://i.ibb.co.com/8nJFSVYz/image.png" },
             { id: 9, name: "Nasi", price: 6000, category: "Makanan", img: "https://i.ibb.co.com/VpDzGRth/image.png" },
             { id: 10, name: "Nasi 1/2", price: 4000, category: "Makanan", img: "https://i.ibb.co.com/VpDzGRth/image.png" },
-            { id: 11, name: "Emping", price: 10000, category: "Tambahan", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdm2nmv1VKtLsk3nbSOzcOGqcylL1OctnOYA&s" },
-            { id: 12, name: "Emping 1/2", price: 5000, category: "Tambahan", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdm2nmv1VKtLsk3nbSOzcOGqcylL1OctnOYA&s" },        
-            { id: 13, name: "Sate 5 Tusuk", price: 35000, category: "Sate", img: "https://assets.unileversolutions.com/recipes-v2/252622.png" },
-            { id: 14, name: "Sate 10 Tusuk", price: 55000, category: "Sate", img: "https://assets.unileversolutions.com/recipes-v2/252622.png" },
-            { id: 15, name: "Sate 15 Tusuk", price: 90000, category: "Sate", img: "https://assets.unileversolutions.com/recipes-v2/252622.png" },
+            { id: 11, name: "Emping", price: 10000, category: "Makanan", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdm2nmv1VKtLsk3nbSOzcOGqcylL1OctnOYA&s" },
+            { id: 12, name: "Emping 1/2", price: 5000, category: "Makanan", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdm2nmv1VKtLsk3nbSOzcOGqcylL1OctnOYA&s" },        
+            { id: 13, name: "Sate 5 Tusuk", price: 35000, category: "Makanan", img: "https://assets.unileversolutions.com/recipes-v2/252622.png" },
+            { id: 14, name: "Sate 10 Tusuk", price: 55000, category: "Makanan", img: "https://assets.unileversolutions.com/recipes-v2/252622.png" },
+            { id: 15, name: "Sate 15 Tusuk", price: 90000, category: "Makanan", img: "https://assets.unileversolutions.com/recipes-v2/252622.png" },
             { id: 16, name: "Air Jeruk", price: 15000, category: "Minuman", img: "https://png.pngtree.com/png-vector/20260117/ourmid/pngtree-freshly-squeezed-iced-orange-juice-es-jeruk-png-image_18551166.webp" },
             { id: 17, name: "Teh Manis", price: 5000, category: "Minuman", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS1vrm0aYp4zLy-a6q7T6U2sNV67wVeBDlXvg&s" },
             { id: 18, name: "Teh Botol", price: 5000, category: "Minuman", img: "https://i.pinimg.com/736x/bc/6a/92/bc6a929cb1e58787e26044a98fbb6031.jpg" },
@@ -623,10 +669,10 @@
             const bar = document.getElementById('kategori-bar');
             if(!bar) return;
             
-            let html = `<button onclick="filterCategory('All')" class="${currentCategoryFilter === 'All' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'} px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition cursor-pointer">Semua Menu</button>`;
+            let html = `<button data-cat="All" onclick="filterCategory('All')" class="fixed-cat ${currentCategoryFilter === 'All' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'} px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition cursor-pointer">Semua Menu</button>`;
             
             categories.forEach(cat => {
-                html += `<button onclick="filterCategory('${cat}')" class="${currentCategoryFilter === cat ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'} px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition cursor-pointer">${cat}</button>`;
+                html += `<button data-cat="${cat}" onclick="filterCategory('${cat}')" class="sortable-cat ${currentCategoryFilter === cat ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'} px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition cursor-pointer cursor-grab">${cat}</button>`;
             });
             bar.innerHTML = html;
         }
@@ -966,7 +1012,6 @@
                     </div>`;
             }).join('');
 
-            // Tombol "Tambah Menu Baru" di ujung jika menggunakan filter kategori spesifik
             if (currentCategoryFilter !== 'All') {
                 html += `
                     <div onclick="quickAddMenuToCategory('${currentCategoryFilter}')" class="border-2 border-dashed border-indigo-200 bg-indigo-50/30 rounded-2xl p-8 flex flex-col items-center justify-center transition hover:border-indigo-400 hover:bg-indigo-50 cursor-pointer group min-h-[250px]">
@@ -1011,7 +1056,6 @@
             document.getElementById('input-menu-name').value = item.name;
             document.getElementById('input-menu-price').value = item.price;
             
-            // Tambahkan ke dropdown list jika belum ada saat load edit
             if (!categories.includes(item.category)) {
                 categories.push(item.category);
                 localStorage.setItem('kasir_categories', JSON.stringify(categories));
@@ -1100,11 +1144,38 @@
             return null;
         }
 
-        function saveOrder() {
+        function proceedToNext() {
             if (cartArray.length === 0) return alert("Keranjang kosong!");
-            
+            const modal = document.getElementById('next-action-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeNextModal() {
+            const modal = document.getElementById('next-action-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function actionSaveOnly() {
+            closeNextModal();
+            saveOrderInternal(false);
+        }
+
+        function actionDirectCheckout() {
+            closeNextModal();
+            const orderId = saveOrderInternal(true);
+            if (orderId) {
+                openCheckoutModal(orderId);
+            }
+        }
+
+        function saveOrderInternal(isDirectCheckout) {
             const orderId = getAvailableOrderId();
-            if (!orderId) return alert("Antrian penuh! Silakan selesaikan pesanan yang ada terlebih dahulu (Maksimal 50).");
+            if (!orderId) {
+                alert("Antrian penuh! Silakan selesaikan pesanan yang ada terlebih dahulu (Maksimal 50).");
+                return null;
+            }
 
             const customerNameInput = document.getElementById('input-customer-name');
             const customerName = customerNameInput.value.trim() || 'Tanpa Nama';
@@ -1127,7 +1198,7 @@
             pendingOrders.push(newOrder);
             savePendingOrdersToStorage();
             
-            alert(`Pesanan #${orderId} atas nama ${customerName} berhasil disimpan ke Daftar Transaksi!`);
+            // Pop up dihilangkan sesuai permintaan
             
             cartArray = []; 
             customerNameInput.value = '';
@@ -1135,6 +1206,8 @@
             if (defaultTypeInput) defaultTypeInput.checked = true;
             
             updateUI();
+
+            return orderId;
         }
 
         function deleteOrder(orderId) {
@@ -1603,12 +1676,18 @@
 
             const order = pendingOrders.find(o => o.orderId === currentCheckoutOrderId);
             const method = document.getElementById("modal-payment-method").value;
-            const btn = document.getElementById("modal-btn-checkout");
             
-            btn.disabled = true; 
-            document.getElementById("modal-btn-text").innerText = "Menyimpan data...";
-            document.getElementById("modal-btn-icon").innerText = "sync";
-            document.getElementById("modal-btn-icon").classList.add("animate-spin");
+            const loadingModal = document.getElementById('modal-loading-upload');
+            const loadingState = document.getElementById('loading-state');
+            const successState = document.getElementById('success-state');
+
+            // Tampilkan animasi loading sinkronisasi
+            loadingModal.classList.remove('hidden');
+            loadingModal.classList.add('flex');
+            loadingState.classList.remove('hidden');
+            loadingState.classList.add('flex');
+            successState.classList.add('hidden');
+            successState.classList.remove('flex');
 
             const now = new Date();
             const dateStr = now.toLocaleDateString('id-ID', {day:'2-digit', month:'2-digit', year:'2-digit'}).replace(/\//g,'');
@@ -1640,37 +1719,42 @@
             })
             .then(res => res.json())
             .then(data => {
-                alert(`Transaksi #${order.orderId} Berhasil! Data otomatis disimpan ke Google Sheets.`);
+                // Sembunyikan loading, tampilkan sukses
+                loadingState.classList.add('hidden');
+                loadingState.classList.remove('flex');
+                successState.classList.remove('hidden');
+                successState.classList.add('flex');
                 
-                if (receiptType === 'pdf' && data.pdfUrl) {
-                    window.open(data.pdfUrl, '_blank');
-                }
-                
-                order.transactionId = kodeTransaksi;
-                order.paymentMethod = method;
-                order.timestampSelesai = now.getTime();
-                completedOrders.unshift(order);
-                if (completedOrders.length > 100) completedOrders.pop(); 
-                saveCompletedOrdersToStorage();
-                
-                pendingOrders = pendingOrders.filter(o => o.orderId !== currentCheckoutOrderId);
-                savePendingOrdersToStorage();
-                closeCheckoutModal();
-                renderTransactions();
+                setTimeout(() => {
+                    loadingModal.classList.add('hidden');
+                    loadingModal.classList.remove('flex');
+                    
+                    if (receiptType === 'pdf' && data.pdfUrl) {
+                        window.open(data.pdfUrl, '_blank');
+                    }
+                    
+                    order.transactionId = kodeTransaksi;
+                    order.paymentMethod = method;
+                    order.timestampSelesai = now.getTime();
+                    completedOrders.unshift(order);
+                    if (completedOrders.length > 100) completedOrders.pop(); 
+                    saveCompletedOrdersToStorage();
+                    
+                    pendingOrders = pendingOrders.filter(o => o.orderId !== currentCheckoutOrderId);
+                    savePendingOrdersToStorage();
+                    closeCheckoutModal();
+                    renderTransactions();
+                }, 2000); 
             })
             .catch(err => { 
                 console.error(err); 
+                loadingModal.classList.add('hidden');
+                loadingModal.classList.remove('flex');
                 alert("Kesalahan pengiriman jaringan. Transaksi akan dihapus dari antrian lokal."); 
                 pendingOrders = pendingOrders.filter(o => o.orderId !== currentCheckoutOrderId);
                 savePendingOrdersToStorage();
                 closeCheckoutModal();
                 renderTransactions();
-            })
-            .finally(() => { 
-                btn.disabled = false; 
-                document.getElementById("modal-btn-text").innerText = "Proses Pembayaran";
-                document.getElementById("modal-btn-icon").innerText = "payments";
-                document.getElementById("modal-btn-icon").classList.remove("animate-spin");
             });
         }
 
@@ -1799,6 +1883,30 @@
             updateCategoryDropdowns();
             renderCategoryBar();
             
+            // Inisialisasi Sortable untuk Kategori Menu (kategori-bar)
+            const catBar = document.getElementById('kategori-bar');
+            if(catBar) {
+                Sortable.create(catBar, {
+                    animation: 150,
+                    filter: '.fixed-cat', 
+                    onMove: function (evt) {
+                        return evt.related.className.indexOf('fixed-cat') === -1;
+                    },
+                    onEnd: function (evt) {
+                        const newCategories = [];
+                        Array.from(catBar.children).forEach(child => {
+                            const cat = child.getAttribute('data-cat');
+                            if(cat && cat !== 'All') {
+                                newCategories.push(cat);
+                            }
+                        });
+                        categories = newCategories;
+                        localStorage.setItem('kasir_categories', JSON.stringify(categories));
+                        updateCategoryDropdowns();
+                    }
+                });
+            }
+
             switchTab('dashboard');
         });
 
