@@ -380,8 +380,10 @@
                 <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600 transition material-symbols-outlined cursor-pointer text-2xl">close</button>
             </div>
             <div class="flex-1 flex flex-col lg:flex-row overflow-hidden bg-slate-50">
-                <div class="flex-1 p-5 overflow-y-auto custom-scroll">
-                    <div id="edit-menu-grid" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+                <div class="flex-1 p-5 flex flex-col overflow-hidden">
+                    <div id="edit-kategori-bar" class="flex overflow-x-auto space-x-2 py-1 mb-3 custom-scroll items-center border-b border-gray-100 pb-2 shrink-0">
+                    </div>
+                    <div id="edit-menu-grid" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 overflow-y-auto custom-scroll pb-12"></div>
                 </div>
                 <div class="w-full lg:w-[400px] bg-white border-l border-slate-200 p-5 flex flex-col shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]">
                     <div class="mb-4">
@@ -600,6 +602,7 @@
             localStorage.setItem('kasir_categories', JSON.stringify(categories));
         }
         let currentCategoryFilter = 'All';
+        let currentEditCategoryFilter = 'All'; // Filter kategori untuk modal edit
 
         let cartArray = []; 
         let pendingOrders = JSON.parse(localStorage.getItem('kasir_pending_orders')) || [];
@@ -681,6 +684,24 @@
             currentCategoryFilter = cat;
             renderCategoryBar();
             renderMenu();
+        }
+
+        function renderEditCategoryBar() {
+            const bar = document.getElementById('edit-kategori-bar');
+            if(!bar) return;
+            
+            let html = `<button onclick="filterEditCategory('All')" class="${currentEditCategoryFilter === 'All' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'} px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition cursor-pointer">Semua</button>`;
+            
+            categories.forEach(cat => {
+                html += `<button onclick="filterEditCategory('${cat}')" class="${currentEditCategoryFilter === cat ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'} px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition cursor-pointer">${cat}</button>`;
+            });
+            bar.innerHTML = html;
+        }
+
+        function filterEditCategory(cat) {
+            currentEditCategoryFilter = cat;
+            renderEditCategoryBar();
+            renderEditMenu();
         }
 
         function quickAddMenuToCategory(cat) {
@@ -1389,6 +1410,8 @@
             const customerNameInput = document.getElementById('edit-customer-name');
             customerNameInput.value = (order.customerName && order.customerName !== 'Tanpa Nama') ? order.customerName : '';
 
+            currentEditCategoryFilter = 'All'; // Reset kategori ke semua saat modal dibuka
+            renderEditCategoryBar(); // Render bar kategori edit
             renderEditMenu();
             renderEditCart();
 
@@ -1406,7 +1429,10 @@
         function renderEditMenu() {
             const grid = document.getElementById('edit-menu-grid');
             if(!grid) return;
-            grid.innerHTML = menuData.map(item => {
+
+            let filteredMenu = currentEditCategoryFilter === 'All' ? menuData : menuData.filter(m => m.category === currentEditCategoryFilter);
+
+            grid.innerHTML = filteredMenu.map(item => {
                 return `
                     <div class="border border-slate-200 bg-white rounded-2xl p-4 flex flex-col justify-between transition hover:border-indigo-300 shadow-sm relative">
                         <div>
